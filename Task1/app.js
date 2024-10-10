@@ -39,25 +39,13 @@ app.post("/upload", upload.single("file"), (req, res) => {
   res.status(200).json({ message: "File uploaded successfully" });
 });
 
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: "Something went wrong", error: err.message });
-});
-
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
-
 function getLatestFile(directory) {
   const files = fs.readdirSync(directory);
 
-  // Lọc chỉ lấy file .xlsx
   const xlsxFiles = files.filter((file) => path.extname(file) === ".xlsx");
 
-  // Nếu không có file nào thì trả về null
   if (xlsxFiles.length === 0) return null;
 
-  // Lấy file mới nhất dựa trên thời gian sửa đổi
   const latestFile = xlsxFiles
     .map((file) => ({
       file,
@@ -121,4 +109,13 @@ app.get("/read-latest-file", (req, res) => {
       .status(500)
       .json({ message: "Error reading file", error: error.message });
   }
+});
+
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: "Something went wrong", error: err.message });
+});
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
