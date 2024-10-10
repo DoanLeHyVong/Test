@@ -67,7 +67,6 @@ app.get("/read-latest-file", (req, res) => {
 
   const start = moment(startTime, "HH:mm");
   const end = moment(endTime, "HH:mm");
-  console.log(start);
 
   if (!start.isValid() || !end.isValid()) {
     return res
@@ -86,7 +85,6 @@ app.get("/read-latest-file", (req, res) => {
 
   const filePath = path.join(uploadDir, latestFile);
 
-  // Đọc file .xlsx
   try {
     const workbook = xlsx.readFile(filePath);
     const sheetName = workbook.SheetNames[0];
@@ -95,14 +93,23 @@ app.get("/read-latest-file", (req, res) => {
     const data = xlsx.utils.sheet_to_json(sheet);
 
     const filteredData = data.filter((row) => {
-      const rowTime = moment(row["Giờ"], "HH:mm");
+      const rowTime = moment(row["__EMPTY_1"], "HH:mm");
       return rowTime.isBetween(start, end, null, "[]");
+    });
+
+    let totalAmount = 0;
+    filteredData.forEach((row) => {
+      const amount = parseFloat(row["__EMPTY_7"]);
+      if (!isNaN(amount)) {
+        totalAmount += amount;
+      }
     });
 
     res.json({
       message: "File read successfully",
       file: latestFile,
       data: filteredData,
+      totalAmount: totalAmount,
     });
   } catch (error) {
     res
