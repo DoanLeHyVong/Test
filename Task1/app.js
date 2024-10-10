@@ -17,6 +17,37 @@ const storage = multer.diskStorage({
   },
 });
 
+const upload = multer({
+  storage: storage,
+  fileFilter: (req, file, cb) => {
+    if (path.extname(file.originalname) !== ".xlsx") {
+      return cb(new Error("Only .xlsx files are allowed!"));
+    }
+    cb(null, true);
+  },
+});
+
+let latestFilePath = null;
+
+app.post("/upload", upload.single("file"), (req, res) => {
+  console.log(req.file);
+  if (!req.file) {
+    return res.status(400).json({ message: "No file uploaded" });
+  }
+
+  latestFilePath = path.join(__dirname, "uploads", "report.xlsx");
+  res.status(200).json({ message: "File uploaded successfully" });
+});
+
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: "Something went wrong", error: err.message });
+});
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+
 function getLatestFile(directory) {
   const files = fs.readdirSync(directory);
 
@@ -90,35 +121,4 @@ app.get("/read-latest-file", (req, res) => {
       .status(500)
       .json({ message: "Error reading file", error: error.message });
   }
-});
-
-const upload = multer({
-  storage: storage,
-  fileFilter: (req, file, cb) => {
-    if (path.extname(file.originalname) !== ".xlsx") {
-      return cb(new Error("Only .xlsx files are allowed!"));
-    }
-    cb(null, true);
-  },
-});
-
-let latestFilePath = null;
-
-app.post("/upload", upload.single("file"), (req, res) => {
-  console.log(req.file);
-  if (!req.file) {
-    return res.status(400).json({ message: "No file uploaded" });
-  }
-
-  latestFilePath = path.join(__dirname, "uploads", "report.xlsx");
-  res.status(200).json({ message: "File uploaded successfully" });
-});
-
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: "Something went wrong", error: err.message });
-});
-
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
 });
